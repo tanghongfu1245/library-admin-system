@@ -185,40 +185,6 @@ dotnet test
 - 测试会重建/清理测试库中的表，不要指向正式库 `library_admin`。
 - 仓库里的 `scripts/run-tests.ps1` 是 Windows + 本地 `.tools` 的便捷脚本，不是 GitHub clone 后的必需步骤。
 
-## 制作 Windows 运行包
-
-仓库不提交 `.tools/`、`.publish/` 和数据库备份，所以运行包需要在开发机上生成。项目根目录执行：
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package-runtime.ps1
-```
-
-脚本会：
-
-1. 停止本机应用和 MySQL；
-2. 重新 `dotnet publish` 到 `.publish`；
-3. 生成一份最新的 `.backups\library_admin_*.sql`；
-4. 复制 `.publish`、`.tools\dotnet`、`.tools\mysql` 和运行所需脚本；
-5. 把 `common.ps1` 的路径别名改为 `C:\Users\Public\library-admin-runtime`；
-6. 去掉 `start.ps1` 的源码时间戳检查；
-7. 生成 `启动.cmd`、`停止.cmd`、`导入数据.cmd`、`使用说明.txt`；
-8. 压缩为 `E:\LibraryAdmin-运行包.zip`（没有 E 盘时输出到桌面）。
-
-生成的压缩包带现有图书数据，接收方解压后先运行 `导入数据.cmd`，再运行 `启动.cmd`。
-
-## 导入现有数据
-
-如果你有 `mysqldump` 生成的 SQL 备份（例如 `library_admin_20261025-174636.sql`），先确保 `library_admin` 库存在，然后导入：
-
-```bash
-mysql -u root -p library_admin < /path/to/library_admin.sql
-```
-
-注意：
-
-- 备份 SQL 里通常有 `DROP TABLE`，应用账号没有 `DROP` 权限，**必须用 root 或有 DROP 权限的账号导入**。
-- 导入前停止正在运行的应用，避免读写冲突。
-- 备份可能包含读者账号、密码哈希、邮箱、手机号和借阅记录；不要提交到 GitHub，也不要公开传输。
 
 ## 常见问题
 
@@ -268,12 +234,7 @@ Schema 使用 `utf8mb4_0900_ai_ci`，需要 MySQL 8.0+。升级 MySQL，或把 S
 
 `launchSettings.json` 里的 5149 只是 Visual Studio 的启动配置；`Program.cs` 使用 `UseUrls` 默认绑定 8080。以控制台输出为准。
 
-## GitHub 与交付说明
 
-- `.gitignore` 已排除 `.tools/`、`.packages/`、`.publish/`、`.data/`、`.runtime/`、`.logs/`、`.backups/`、`bin/`、`obj/`、`.vs/` 和 `MySQL数据库连接信息.txt`。
-- 仓库只保存源码和文档；不要提交数据库数据、备份、数据库密码或工具二进制。
-- 如果老师/同学要“解压即用”，请使用 Release 中的运行包，而不是直接 clone 仓库。
-- 运行包若包含现有数据，应使用脱敏后的 SQL；不要包含真实读者个人信息。
 
 ## 安全建议
 
