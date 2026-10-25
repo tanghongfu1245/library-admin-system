@@ -4,6 +4,8 @@
 
 适合作为课程作业、个人练习或小型图书角管理工具。应用默认只监听本机 `127.0.0.1`，不对外网开放。
 
+仓库地址：<https://github.com/tanghongfu1245/library-admin-system>（当前为 private，需要仓库所有者邀请后才能访问）。
+
 ## 功能
 
 - 读者注册、登录、修改密码
@@ -78,7 +80,7 @@
 ### 1. 克隆仓库
 
 ```bash
-git clone <你的仓库地址>
+git clone https://github.com/tanghongfu1245/library-admin-system.git
 cd library-admin-system
 ```
 
