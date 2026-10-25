@@ -1,0 +1,67 @@
+@page "{id:long?}"
+@model LibraryAdmin.Web.Pages.Books.EditModel
+@{
+    ViewData["Title"] = Model.IsNew ? "新增图书" : "编辑图书";
+}
+
+<div class="page-heading">
+    <div>
+        <div class="eyebrow">Catalog record</div>
+        <h1>@(Model.IsNew ? "新增图书" : "编辑图书")</h1>
+        <div class="muted">图书信息与实体副本分开管理。</div>
+    </div>
+    <a class="btn btn-outline-secondary" asp-page="/Books/Index">返回目录</a>
+</div>
+
+<section class="surface">
+    <div class="surface-body">
+        <form method="post" asp-route-id="@Model.BookId">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <label asp-for="Input.Title" class="form-label">书名</label>
+                    <input asp-for="Input.Title" class="form-control" />
+                    <span asp-validation-for="Input.Title" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Input.Author" class="form-label">作者</label>
+                    <input asp-for="Input.Author" class="form-control" />
+                    <span asp-validation-for="Input.Author" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Input.Isbn" class="form-label">ISBN</label>
+                    <input asp-for="Input.Isbn" class="form-control" />
+                    <span asp-validation-for="Input.Isbn" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Input.Category" class="form-label">分类</label>
+                    <input asp-for="Input.Category" class="form-control" placeholder="例如：文学、计算机" />
+                    <span asp-validation-for="Input.Category" class="text-danger"></span>
+                </div>
+                <div class="col-md-5">
+                    <label asp-for="Input.Publisher" class="form-label">出版社</label>
+                    <input asp-for="Input.Publisher" class="form-control" />
+                    <span asp-validation-for="Input.Publisher" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Input.PublicationYear" class="form-label">出版年</label>
+                    <input asp-for="Input.PublicationYear" class="form-control" type="number" min="1000" max="2100" />
+                    <span asp-validation-for="Input.PublicationYear" class="text-danger"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="Input.Description" class="form-label">简介</label>
+                    <textarea asp-for="Input.Description" class="form-control" rows="5"></textarea>
+                    <span asp-validation-for="Input.Description" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">保存图书</button>
+                <a class="btn btn-outline-secondary" asp-page="/Books/Details" asp-route-id="@Model.BookId">取消</a>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

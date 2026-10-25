@@ -1,0 +1,211 @@
+@page "{id:long}"
+@model LibraryAdmin.Web.Pages.Books.DetailsModel
+@using LibraryAdmin.Web.Security
+@{
+    ViewData["Title"] = Model.BookDetail.Title;
+    var availableCopies = Model.Copies.Where(c => !c.IsDisabled && c.ActiveLoanId is null).ToList();
+}
+
+<div class="page-heading">
+    <div>
+        <div class="eyebrow">Catalog record</div>
+        <h1>@Model.BookDetail.Title</h1>
+        <div class="muted">@Model.BookDetail.Author · ISBN @Model.BookDetail.Isbn</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-page="/Books/Index">返回目录</a>
+        @if (User.IsInRole("Admin"))
+        {
+            <a class="btn btn-primary" asp-page="/Books/Edit" asp-route-id="@Model.BookDetail.Id">编辑资料</a>
+        }
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <section class="surface mb-4">
+            <div class="surface-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">图书信息</h2>
+                    @if (Model.BookDetail.IsArchived)
+                    {
+                        <span class="status-chip status-disabled">已归档</span>
+                    }
+                    else
+                    {
+                        <span class="status-chip status-active">在馆</span>
+                    }
+                </div>
+                <dl class="detail-list">
+                    <dt>分类</dt><dd>@(Model.BookDetail.Category ?? "—")</dd>
+                    <dt>出版社</dt><dd>@(Model.BookDetail.Publisher ?? "—")</dd>
+                    <dt>出版年</dt><dd>@(Model.BookDetail.PublicationYear?.ToString() ?? "—")</dd>
+                    <dt>实体副本</dt><dd>@Model.BookDetail.CopyCount 册</dd>
+                    <dt>当前可借</dt><dd>@Model.BookDetail.AvailableCount 册</dd>
+                    <dt>借阅中</dt><dd>@Model.BookDetail.ActiveLoanCount 册</dd>
+                </dl>
+                @if (!string.IsNullOrWhiteSpace(Model.BookDetail.Description))
+                {
+                    <hr />
+                    <p class="mb-0">@Model.BookDetail.Description</p>
+                }
+            </div>
+        </section>
+
+        @if (User.IsInRole("Reader") && !Model.BookDetail.IsArchived && availableCopies.Count > 0)
+        {
+            <section class="surface">
+                <div class="surface-body">
+                    <h2 class="h5">借阅这本书</h2>
+                    <form method="post" asp-page-handler="Borrow" asp-route-id="@Model.BookDetail.Id">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+                        <div class="mb-3">
+                            <label asp-for="Borrow.CopyId" class="form-label">选择实体副本</label>
+                            <select asp-for="Borrow.CopyId" class="form-select">
+                                @foreach (var copy in availableCopies)
+                                {
+                                    <option value="@copy.Id">@copy.CopyCode @(string.IsNullOrWhiteSpace(copy.ShelfLocation) ? "" : $"· {copy.ShelfLocation}")</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Borrow.DueDays" class="form-label">借阅期限（天）</label>
+                            <input asp-for="Borrow.DueDays" class="form-control" type="number" min="1" max="30" />
+                            <div class="form-text">默认 30 天，可选择 1 至 30 天；借出后不可修改。</div>
+                            <span asp-validation-for="Borrow.DueDays" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Borrow.Notes" class="form-label">备注（可选）</label>
+                            <input asp-for="Borrow.Notes" class="form-control" />
+                        </div>
+                        <button class="btn btn-primary w-100" type="submit">确认借阅</button>
+                    </form>
+                </div>
+            </section>
+        }
+    </div>
+
+    <div class="col-lg-8">
+        <section class="surface mb-4">
+            <div class="surface-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">实体副本</h2>
+                    <span class="muted">@Model.Copies.Count 个编号</span>
+                </div>
+                @if (Model.Copies.Count == 0)
+                {
+                    <div class="empty-state">尚未录入实体副本。</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>馆藏编号</th>
+                                    <th>位置</th>
+                                    <th>状态</th>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <th>操作</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var copy in Model.Copies)
+                                {
+                                    <tr>
+                                        <td class="font-monospace">@copy.CopyCode</td>
+                                        <td>@(copy.ShelfLocation ?? "—")</td>
+                                        <td>
+                                            @if (copy.IsDisabled)
+                                            {
+                                                <span class="status-chip status-disabled">已停用</span>
+                                            }
+                                            else if (copy.ActiveLoanId is not null)
+                                            {
+                                                <span class="status-chip status-active">借阅中</span>
+                                                @if (User.IsInRole("Admin"))
+                                                {
+                                                    <span class="muted d-block">@copy.BorrowedBy · 到期 @copy.DueAt?.ToString("yyyy-MM-dd")</span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="status-chip status-returned">可借</span>
+                                            }
+                                        </td>
+                                        @if (User.IsInRole("Admin"))
+                                        {
+                                            <td>
+                                                <div class="table-actions">
+                                                    <form method="post" asp-page-handler="ToggleCopy" asp-route-id="@Model.BookDetail.Id" asp-route-copyId="@copy.Id">
+                                                        <input type="hidden" name="disabled" value="@((!copy.IsDisabled).ToString().ToLowerInvariant())" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-secondary">@(copy.IsDisabled ? "启用" : "停用")</button>
+                                                    </form>
+                                                    <form method="post" asp-page-handler="DeleteCopy" asp-route-id="@Model.BookDetail.Id" asp-route-copyId="@copy.Id"
+                                                          onsubmit="return confirm('确定永久删除这个副本吗？有借阅历史时系统会阻止删除。');">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">删除</button>
+                                                    </form>
+                                                </div>
+                                                <details class="mt-2">
+                                                    <summary class="btn btn-sm btn-link px-0">编辑编号</summary>
+                                                    <form method="post" asp-page-handler="UpdateCopy"
+                                                          asp-route-id="@Model.BookDetail.Id" asp-route-copyId="@copy.Id"
+                                                          class="d-flex gap-1 mt-2">
+                                                        <input name="EditCopy.CopyCode" value="@copy.CopyCode" class="form-control form-control-sm" aria-label="馆藏编号" required />
+                                                        <input name="EditCopy.ShelfLocation" value="@copy.ShelfLocation" class="form-control form-control-sm" aria-label="书架位置" />
+                                                        <button type="submit" class="btn btn-sm btn-primary">保存</button>
+                                                    </form>
+                                                </details>
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </section>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <section class="surface">
+                <div class="surface-body">
+                    <h2 class="h5">新增实体副本</h2>
+                    <form method="post" asp-page-handler="AddCopy" asp-route-id="@Model.BookDetail.Id" class="row g-2 align-items-end">
+                        <div class="col-sm-5">
+                            <label asp-for="NewCopy.CopyCode" class="form-label">馆藏编号</label>
+                            <input asp-for="NewCopy.CopyCode" class="form-control" placeholder="例如 LIB-0001" />
+                            <span asp-validation-for="NewCopy.CopyCode" class="text-danger"></span>
+                        </div>
+                        <div class="col-sm-5">
+                            <label asp-for="NewCopy.ShelfLocation" class="form-label">书架位置</label>
+                            <input asp-for="NewCopy.ShelfLocation" class="form-control" placeholder="例如 A-03-12" />
+                        </div>
+                        <div class="col-sm-2 d-grid">
+                            <button type="submit" class="btn btn-primary">新增</button>
+                        </div>
+                    </form>
+
+                    <hr class="my-4" />
+                    <div class="d-flex flex-wrap gap-2">
+                        <form method="post" asp-page-handler="Archive" asp-route-id="@Model.BookDetail.Id">
+                            <input type="hidden" name="archived" value="@((!Model.BookDetail.IsArchived).ToString().ToLowerInvariant())" />
+                            <button type="submit" class="btn btn-outline-secondary">@(Model.BookDetail.IsArchived ? "恢复图书" : "归档图书")</button>
+                        </form>
+                        <form method="post" asp-page-handler="DeleteBook" asp-route-id="@Model.BookDetail.Id"
+                              onsubmit="return confirm('确定永久删除这本图书及其全部无历史副本吗？');">
+                            <button type="submit" class="btn btn-outline-danger">永久删除图书</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

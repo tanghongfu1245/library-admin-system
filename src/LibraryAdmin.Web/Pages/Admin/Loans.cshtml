@@ -1,0 +1,148 @@
+@page
+@model LibraryAdmin.Web.Pages.Admin.LoansModel
+@{
+    ViewData["Title"] = "全部借阅";
+}
+
+<div class="page-heading">
+    <div>
+        <div class="eyebrow">Circulation desk</div>
+        <h1>借阅管理</h1>
+        <div class="muted">管理员可替读者办理借阅和归还。未归还记录可撤销，已归还历史不可删除。</div>
+    </div>
+</div>
+
+<section class="surface mb-4">
+    <div class="surface-body">
+        <h2 class="h5">办理借阅</h2>
+        @if (Model.Borrowers.Count == 0 || Model.AvailableCopies.Count == 0)
+        {
+            <div class="alert alert-warning mb-0">需要至少一个启用的读者账号和一个可借副本。请先维护用户和馆藏。</div>
+        }
+        else
+        {
+            <form method="post" asp-page-handler="Borrow" class="row g-3 align-items-end">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="col-lg-3">
+                    <label asp-for="BorrowerId" class="form-label">借阅人</label>
+                    <select asp-for="BorrowerId" class="form-select">
+                        <option value="">请选择读者</option>
+                        @foreach (var borrower in Model.Borrowers)
+                        {
+                            <option value="@borrower.Id">@borrower.DisplayName（@borrower.Username）</option>
+                        }
+                    </select>
+                    <span asp-validation-for="BorrowerId" class="text-danger"></span>
+                </div>
+                <div class="col-lg-4">
+                    <label asp-for="BorrowForm.CopyId" class="form-label">实体副本</label>
+                    <select asp-for="BorrowForm.CopyId" class="form-select">
+                        <option value="">请选择可借副本</option>
+                        @foreach (var copy in Model.AvailableCopies)
+                        {
+                            <option value="@copy.Id">@copy.BookTitle · @copy.CopyCode</option>
+                        }
+                    </select>
+                    <span asp-validation-for="BorrowForm.CopyId" class="text-danger"></span>
+                </div>
+                <div class="col-lg-2">
+                    <label asp-for="BorrowForm.DueDays" class="form-label">期限（天）</label>
+                    <input asp-for="BorrowForm.DueDays" class="form-control" type="number" min="1" max="30" />
+                    <span asp-validation-for="BorrowForm.DueDays" class="text-danger"></span>
+                </div>
+                <div class="col-lg-2">
+                    <label asp-for="BorrowForm.Notes" class="form-label">备注</label>
+                    <input asp-for="BorrowForm.Notes" class="form-control" />
+                </div>
+                <div class="col-lg-1 d-grid">
+                    <button class="btn btn-primary" type="submit">借出</button>
+                </div>
+            </form>
+        }
+    </div>
+</section>
+
+<section class="surface">
+    <div class="surface-body">
+        <form method="get" class="row g-2 align-items-end mb-4">
+            <div class="col-md-6">
+                <label asp-for="Query" class="form-label">搜索</label>
+                <input asp-for="Query" class="form-control" placeholder="书名、馆藏编号或读者姓名" />
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Status" class="form-label">状态</label>
+                <select asp-for="Status" class="form-select">
+                    <option value="all">全部</option>
+                    <option value="active">借阅中</option>
+                    <option value="overdue">已逾期</option>
+                    <option value="returned">已归还</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button class="btn btn-primary" type="submit">筛选</button>
+            </div>
+        </form>
+
+        @if (Model.Loans.Items.Count == 0)
+        {
+            <div class="empty-state">当前没有符合条件的借阅记录。</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>读者</th>
+                            <th>图书</th>
+                            <th>副本</th>
+                            <th>借出 / 到期</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var loan in Model.Loans.Items)
+                        {
+                            <tr>
+                                <td>@loan.UserDisplayName<span class="muted d-block">@loan.Username</span></td>
+                                <td><a asp-page="/Books/Details" asp-route-id="@loan.BookId">@loan.BookTitle</a></td>
+                                <td class="font-monospace">@loan.CopyCode</td>
+                                <td>
+                                    @loan.BorrowedAt.ToLocalDisplay("yyyy-MM-dd")
+                                    <span class="muted d-block">到期 @loan.DueAt.ToString("yyyy-MM-dd")</span>
+                                </td>
+                                <td><span class="status-chip @loan.StatusCss">@loan.StatusText</span></td>
+                                <td>
+                                    @if (loan.ReturnedAt is null)
+                                    {
+                                        <div class="table-actions">
+                                            <form method="post" asp-page-handler="Return">
+                                                <input type="hidden" name="loanId" value="@loan.Id" />
+                                                <button class="btn btn-sm btn-primary" type="submit">归还</button>
+                                            </form>
+                                            <form method="post" asp-page-handler="Void"
+                                                  onsubmit="return confirm('只适用于录入错误的未归还记录。确认撤销吗？');">
+                                                <input type="hidden" name="loanId" value="@loan.Id" />
+                                                <button class="btn btn-sm btn-outline-danger" type="submit">撤销</button>
+                                            </form>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="muted">@loan.ReturnedAt.ToLocalDisplay()</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <partial name="_Pagination" model="Model.Pagination" />
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,22 @@
+@page
+@model ErrorModel
+@{
+    ViewData["Title"] = "无法完成请求";
+}
+
+<div class="auth-shell">
+    <section class="surface auth-card">
+        <div class="eyebrow">Request unavailable</div>
+        <h1 class="mb-3">无法完成请求</h1>
+        <p class="muted">登录状态可能已失效，或当前账号没有访问此页面的权限。</p>
+        <div class="d-flex gap-2 mt-4">
+            <a class="btn btn-primary" asp-page="/Index">返回首页</a>
+            <a class="btn btn-outline-secondary" asp-page="/Account/Login">重新登录</a>
+        </div>
+
+        @if (Model.ShowRequestId)
+        {
+            <p class="muted mt-4 mb-0">请求编号：<code>@Model.RequestId</code></p>
+        }
+    </section>
+</div>

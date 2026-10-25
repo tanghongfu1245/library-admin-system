@@ -1,0 +1,140 @@
+@page
+@model LibraryAdmin.Web.Pages.Admin.AccountsModel
+@using LibraryAdmin.Web.Security
+@{
+    ViewData["Title"] = "账号管理";
+}
+
+<div class="page-heading">
+    <div>
+        <div class="eyebrow">People</div>
+        <h1>账号管理</h1>
+        <div class="muted">初始 admin 不可停用或删除；有其他借阅历史的账号只能停用。</div>
+    </div>
+</div>
+
+<section class="surface mb-4">
+    <div class="surface-body">
+        <h2 class="h5">新增读者账号</h2>
+        <form method="post" asp-page-handler="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="NewReader.Username" class="form-label">用户名</label>
+                    <input asp-for="NewReader.Username" class="form-control" />
+                    <span asp-validation-for="NewReader.Username" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="NewReader.DisplayName" class="form-label">姓名</label>
+                    <input asp-for="NewReader.DisplayName" class="form-control" />
+                    <span asp-validation-for="NewReader.DisplayName" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="NewReader.Email" class="form-label">邮箱（可选）</label>
+                    <input asp-for="NewReader.Email" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="NewReader.Phone" class="form-label">电话（可选）</label>
+                    <input asp-for="NewReader.Phone" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="NewReader.Password" class="form-label">初始密码</label>
+                    <input asp-for="NewReader.Password" class="form-control" />
+                    <span asp-validation-for="NewReader.Password" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="NewReader.ConfirmPassword" class="form-label">确认密码</label>
+                    <input asp-for="NewReader.ConfirmPassword" class="form-control" />
+                    <span asp-validation-for="NewReader.ConfirmPassword" class="text-danger"></span>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-primary" type="submit">创建读者</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="surface">
+    <div class="surface-body">
+        <form method="get" class="row g-2 align-items-end mb-4">
+            <div class="col-md-10">
+                <label asp-for="Query" class="form-label">搜索账号</label>
+                <input asp-for="Query" class="form-control" placeholder="用户名、姓名或邮箱" />
+            </div>
+            <div class="col-md-2 d-grid">
+                <button class="btn btn-primary" type="submit">查询</button>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>账号</th>
+                        <th>联系方式</th>
+                        <th>角色</th>
+                        <th>状态</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model.Users.Items)
+                    {
+                        <tr>
+                            <td>
+                                <span class="book-title">@user.DisplayName</span>
+                                <span class="muted d-block">@user.Username</span>
+                            </td>
+                            <td>
+                                @(user.Email ?? "—")
+                                <span class="muted d-block">@(user.Phone ?? "—")</span>
+                            </td>
+                            <td>
+                                @(user.Role == AccountRole.Admin ? "管理员" : "读者")
+                                @if (user.IsBootstrapAdmin)
+                                {
+                                    <span class="badge text-bg-warning ms-1">初始</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="status-chip @(user.IsDisabled ? "status-disabled" : "status-active")">
+                                    @(user.IsDisabled ? "已停用" : "已启用")
+                                </span>
+                            </td>
+                            <td>@user.CreatedAt.ToLocalDisplay("yyyy-MM-dd")</td>
+                            <td>
+                                @if (!user.IsBootstrapAdmin && user.Id != User.GetUserId() &&
+                                     (user.Role != AccountRole.Admin || User.IsBootstrapAdmin()))
+                                {
+                                    <div class="table-actions">
+                                        <form method="post" asp-page-handler="Toggle">
+                                            <input type="hidden" name="targetId" value="@user.Id" />
+                                            <input type="hidden" name="disabled" value="@((!user.IsDisabled).ToString().ToLowerInvariant())" />
+                                            <button class="btn btn-sm btn-outline-secondary" type="submit">@(user.IsDisabled ? "启用" : "停用")</button>
+                                        </form>
+                                        <form method="post" asp-page-handler="Delete"
+                                              onsubmit="return confirm('只有从未产生借阅的账号才能永久删除，确认继续吗？');">
+                                            <input type="hidden" name="targetId" value="@user.Id" />
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">删除</button>
+                                        </form>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="muted">受保护</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <partial name="_Pagination" model="Model.Pagination" />
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

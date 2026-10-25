@@ -1,0 +1,77 @@
+@page
+@model LibraryAdmin.Web.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "注册";
+}
+
+<div class="auth-shell">
+    <section class="surface auth-card">
+        <div class="eyebrow">Create account</div>
+        <h1 class="mb-2">注册账号</h1>
+        <p class="muted mb-4">读者账号会立即启用；管理员申请需由初始 admin 审批，总管理员最多 4 名。</p>
+
+        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger">@Model.ErrorMessage</div>
+        }
+
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <fieldset class="mb-4">
+                <legend class="form-label fs-6">账号类型</legend>
+                <div class="d-flex gap-3">
+                    <label class="form-check">
+                        <input class="form-check-input" type="radio" asp-for="Input.RegistrationType" value="Reader" />
+                        <span class="form-check-label">普通读者</span>
+                    </label>
+                    <label class="form-check">
+                        <input class="form-check-input" type="radio" asp-for="Input.RegistrationType" value="Admin" />
+                        <span class="form-check-label">申请管理员</span>
+                    </label>
+                </div>
+                <span asp-validation-for="Input.RegistrationType" class="text-danger"></span>
+            </fieldset>
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <label asp-for="Input.Username" class="form-label">用户名</label>
+                    <input asp-for="Input.Username" class="form-control" autocomplete="username" />
+                    <span asp-validation-for="Input.Username" class="text-danger"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="Input.DisplayName" class="form-label">姓名</label>
+                    <input asp-for="Input.DisplayName" class="form-control" autocomplete="name" />
+                    <span asp-validation-for="Input.DisplayName" class="text-danger"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="Input.Email" class="form-label">邮箱（可选）</label>
+                    <input asp-for="Input.Email" class="form-control" autocomplete="email" />
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="Input.Phone" class="form-label">电话（可选）</label>
+                    <input asp-for="Input.Phone" class="form-control" autocomplete="tel" />
+                    <span asp-validation-for="Input.Phone" class="text-danger"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="Input.Password" class="form-label">密码</label>
+                    <input asp-for="Input.Password" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+                <div class="col-sm-6">
+                    <label asp-for="Input.ConfirmPassword" class="form-label">确认密码</label>
+                    <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mt-4">提交注册</button>
+        </form>
+        <div class="text-center mt-3">
+            <span class="muted">已有账号？</span>
+            <a asp-page="/Account/Login">返回登录</a>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

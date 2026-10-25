@@ -1,0 +1,85 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "概览";
+}
+
+<div class="page-heading">
+    <div>
+        <div class="eyebrow">Library overview</div>
+        <h1>你好，@User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value</h1>
+        <div class="muted">从这里查看馆藏状态、借阅情况和快捷入口。</div>
+    </div>
+    <a class="btn btn-primary" asp-page="/Books/Index">查找图书</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-2">
+        <div class="stat-card"><div class="label">图书种类</div><div class="value">@Model.Stats.BookTitles</div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="stat-card"><div class="label">实体副本</div><div class="value">@Model.Stats.TotalCopies</div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="stat-card"><div class="label">当前可借</div><div class="value">@Model.Stats.AvailableCopies</div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="stat-card"><div class="label">借阅中</div><div class="value">@Model.Stats.ActiveLoans</div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="stat-card warning"><div class="label">已逾期</div><div class="value">@Model.Stats.OverdueLoans</div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="stat-card"><div class="label">有效读者</div><div class="value">@Model.Stats.Readers</div></div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <section class="surface">
+            <div class="surface-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">最近更新的图书</h2>
+                    <a asp-page="/Books/Index">查看全部</a>
+                </div>
+                @if (Model.RecentBooks.Count == 0)
+                {
+                    <div class="empty-state">馆藏还是空的。@(User.IsInRole("Admin") ? "管理员可以先新增一本图书。" : "请等待管理员录入图书。")</div>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var book in Model.RecentBooks)
+                        {
+                            <a class="list-group-item list-group-item-action px-0 d-flex justify-content-between gap-3"
+                               asp-page="/Books/Details" asp-route-id="@book.Id">
+                                <span>
+                                    <span class="book-title">@book.Title</span>
+                                    <span class="book-meta d-block">@book.Author · @(book.Category ?? "未分类")</span>
+                                </span>
+                                <span class="badge text-bg-light align-self-center">可借 @book.AvailableCount / @book.CopyCount</span>
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+    </div>
+    <div class="col-lg-4">
+        <section class="surface h-100">
+            <div class="surface-body">
+                <h2 class="h5">快捷操作</h2>
+                <div class="d-grid gap-2">
+                    <a class="btn btn-outline-primary" asp-page="/Loans/Mine">查看我的借阅</a>
+                    <a class="btn btn-outline-primary" asp-page="/Account/Profile">更新个人资料</a>
+                    <a class="btn btn-outline-primary" asp-page="/Account/Password">修改登录密码</a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a class="btn btn-primary" asp-page="/Books/Edit">新增图书</a>
+                        <a class="btn btn-outline-secondary" asp-page="/Admin/Loans">办理借还</a>
+                    }
+                </div>
+            </div>
+        </section>
+    </div>
+</div>

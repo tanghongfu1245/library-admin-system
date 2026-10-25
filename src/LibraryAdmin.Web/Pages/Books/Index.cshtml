@@ -1,0 +1,85 @@
+@page
+@model LibraryAdmin.Web.Pages.Books.IndexModel
+@{
+    ViewData["Title"] = "图书目录";
+}
+
+<div class="page-heading">
+    <div>
+        <div class="eyebrow">Collection</div>
+        <h1>图书目录</h1>
+        <div class="muted">每本书可以拥有多个独立编号的实体副本。</div>
+    </div>
+    @if (User.IsInRole("Admin"))
+    {
+        <a class="btn btn-primary" asp-page="/Books/Edit">新增图书</a>
+    }
+</div>
+
+<section class="surface">
+    <div class="surface-body">
+        <form method="get" class="row g-2 align-items-end mb-4">
+            <div class="col-md-7">
+                <label asp-for="Query" class="form-label">搜索</label>
+                <input asp-for="Query" class="form-control" placeholder="书名、作者、ISBN 或分类" />
+            </div>
+            @if (User.IsInRole("Admin"))
+            {
+                <div class="col-md-3">
+                    <div class="form-check mb-2">
+                        <input asp-for="IncludeArchived" class="form-check-input" />
+                        <label asp-for="IncludeArchived" class="form-check-label">包含已归档</label>
+                    </div>
+                </div>
+            }
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary">查询</button>
+            </div>
+        </form>
+
+        @if (Model.Books.Items.Count == 0)
+        {
+            <div class="empty-state">没有找到符合条件的图书。</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>书名</th>
+                            <th>作者</th>
+                            <th>分类</th>
+                            <th>ISBN</th>
+                            <th>可借 / 副本</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var book in Model.Books.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <a class="book-title text-decoration-none" asp-page="/Books/Details" asp-route-id="@book.Id">@book.Title</a>
+                                    @if (book.IsArchived)
+                                    {
+                                        <span class="status-chip status-disabled ms-1">已归档</span>
+                                    }
+                                </td>
+                                <td>@book.Author</td>
+                                <td>@(book.Category ?? "—")</td>
+                                <td class="font-monospace">@book.Isbn</td>
+                                <td><span class="badge text-bg-light">@book.AvailableCount / @book.CopyCount</span></td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-primary" asp-page="/Books/Details" asp-route-id="@book.Id">查看</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <partial name="_Pagination" model="Model.Pagination" />
+        }
+    </div>
+</section>

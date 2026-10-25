@@ -1,0 +1,45 @@
+@page
+@model LibraryAdmin.Web.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "登录";
+}
+
+<div class="auth-shell">
+    <section class="surface auth-card">
+        <div class="eyebrow">Welcome back</div>
+        <h1 class="mb-2">登录图书馆</h1>
+        <p class="muted mb-4">使用用户名和密码进入系统。</p>
+
+        @if (TempData["LoginMessage"] is string loginMessage)
+        {
+            <div class="alert alert-success">@loginMessage</div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger">@Model.ErrorMessage</div>
+        }
+
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <div class="mb-3">
+                <label asp-for="Input.Username" class="form-label">用户名</label>
+                <input asp-for="Input.Username" class="form-control" autocomplete="username" autofocus />
+                <span asp-validation-for="Input.Username" class="text-danger"></span>
+            </div>
+            <div class="mb-4">
+                <label asp-for="Input.Password" class="form-label">密码</label>
+                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" />
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">登录</button>
+        </form>
+        <div class="text-center mt-3">
+            <span class="muted">还没有账号？</span>
+            <a asp-page="/Account/Register">注册或申请管理员</a>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

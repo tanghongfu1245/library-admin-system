@@ -1,0 +1,86 @@
+@page
+@model LibraryAdmin.Web.Pages.Loans.MineModel
+@using LibraryAdmin.Web.Security
+@{
+    ViewData["Title"] = "我的借阅";
+}
+
+<div class="page-heading">
+    <div>
+        <div class="eyebrow">My borrowing</div>
+        <h1>我的借阅</h1>
+        <div class="muted">借出后到期日不可修改；逾期记录仍可归还。</div>
+    </div>
+    <a class="btn btn-primary" asp-page="/Books/Index">继续找书</a>
+</div>
+
+<section class="surface">
+    <div class="surface-body">
+        <form method="get" class="row g-2 align-items-end mb-4">
+            <div class="col-md-6">
+                <label asp-for="Query" class="form-label">搜索</label>
+                <input asp-for="Query" class="form-control" placeholder="书名、馆藏编号" />
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Status" class="form-label">状态</label>
+                <select asp-for="Status" class="form-select">
+                    <option value="all">全部</option>
+                    <option value="active">借阅中</option>
+                    <option value="overdue">已逾期</option>
+                    <option value="returned">已归还</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button class="btn btn-primary" type="submit">筛选</button>
+            </div>
+        </form>
+
+        @if (Model.Loans.Items.Count == 0)
+        {
+            <div class="empty-state">当前没有符合条件的借阅记录。</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>图书</th>
+                            <th>馆藏编号</th>
+                            <th>借出日期</th>
+                            <th>到期日期</th>
+                            <th>状态</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var loan in Model.Loans.Items)
+                        {
+                            <tr>
+                                <td><a class="book-title text-decoration-none" asp-page="/Books/Details" asp-route-id="@loan.BookId">@loan.BookTitle</a></td>
+                                <td class="font-monospace">@loan.CopyCode</td>
+                                <td>@loan.BorrowedAt.ToLocalDisplay()</td>
+                                <td>@loan.DueAt.ToString("yyyy-MM-dd")</td>
+                                <td><span class="status-chip @loan.StatusCss">@loan.StatusText</span></td>
+                                <td class="text-end">
+                                    @if (loan.ReturnedAt is null)
+                                    {
+                                        <form method="post" asp-page-handler="Return" onsubmit="return confirm('确认归还这本图书吗？');">
+                                            <input type="hidden" name="loanId" value="@loan.Id" />
+                                            <button class="btn btn-sm btn-primary" type="submit">归还</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="muted">@loan.ReturnedAt.ToLocalDisplay()</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <partial name="_Pagination" model="Model.Pagination" />
+        }
+    </div>
+</section>

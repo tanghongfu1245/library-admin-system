@@ -1,0 +1,96 @@
+@page
+@model LibraryAdmin.Web.Pages.Admin.AdminApplicationsModel
+@{
+    ViewData["Title"] = "管理员审批";
+}
+
+<div class="page-heading">
+    <div>
+        <div class="eyebrow">Administration</div>
+        <h1>管理员申请审批</h1>
+        <div class="muted">只有初始 admin 可审批。已启用管理员包括 admin 在内最多 4 名。</div>
+    </div>
+    <a class="btn btn-outline-secondary" asp-page="/Admin/Accounts">账号管理</a>
+</div>
+
+<section class="surface">
+    <div class="surface-body">
+        @if (Model.Applications.Count == 0)
+        {
+            <div class="empty-state">暂无管理员申请。</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>申请人</th>
+                            <th>提交时间</th>
+                            <th>状态</th>
+                            <th>处理信息</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var application in Model.Applications)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="book-title">@application.DisplayName</span>
+                                    <span class="muted d-block">@application.Username</span>
+                                </td>
+                                <td>@application.SubmittedAt.ToLocalDisplay()</td>
+                                <td>
+                                    @switch (application.Status)
+                                    {
+                                        case ApplicationStatus.Pending:
+                                            <span class="status-chip status-active">待审批</span>
+                                            break;
+                                        case ApplicationStatus.Approved:
+                                            <span class="status-chip status-returned">已批准</span>
+                                            break;
+                                        default:
+                                            <span class="status-chip status-overdue">已拒绝</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    @if (application.ReviewedAt is not null)
+                                    {
+                                        <span>@application.ReviewedBy</span>
+                                        <span class="muted d-block">@application.ReviewedAt.ToLocalDisplay()</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="muted">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (application.Status == ApplicationStatus.Pending)
+                                    {
+                                        <div class="table-actions">
+                                            <form method="post" asp-page-handler="Approve"
+                                                  onsubmit="return confirm('确认批准该管理员申请吗？');">
+                                                <input type="hidden" name="applicationId" value="@application.Id" />
+                                                <button class="btn btn-sm btn-primary" type="submit">批准</button>
+                                            </form>
+                                            <form method="post" asp-page-handler="Reject">
+                                                <input type="hidden" name="applicationId" value="@application.Id" />
+                                                <button class="btn btn-sm btn-outline-danger" type="submit">拒绝</button>
+                                            </form>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="muted">已处理</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>

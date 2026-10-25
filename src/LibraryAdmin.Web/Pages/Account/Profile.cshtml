@@ -1,0 +1,58 @@
+@page
+@model LibraryAdmin.Web.Pages.Account.ProfileModel
+@{
+    ViewData["Title"] = "个人资料";
+}
+
+<div class="page-heading">
+    <div>
+        <div class="eyebrow">Account</div>
+        <h1>个人资料</h1>
+        <div class="muted">用户名 @Model.Username · @Model.RoleText</div>
+    </div>
+    <a class="btn btn-outline-primary" asp-page="/Account/Password">修改密码</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <section class="surface">
+            <div class="surface-body">
+                @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+                {
+                    <div class="alert @(Model.StatusMessage.Contains("已更新") ? "alert-success" : "alert-danger")">@Model.StatusMessage</div>
+                }
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <div class="mb-3">
+                        <label asp-for="Input.DisplayName" class="form-label">姓名</label>
+                        <input asp-for="Input.DisplayName" class="form-control" />
+                        <span asp-validation-for="Input.DisplayName" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Input.Email" class="form-label">邮箱</label>
+                        <input asp-for="Input.Email" class="form-control" />
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="Input.Phone" class="form-label">电话</label>
+                        <input asp-for="Input.Phone" class="form-control" />
+                        <span asp-validation-for="Input.Phone" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary">保存资料</button>
+                </form>
+            </div>
+        </section>
+    </div>
+    <div class="col-lg-5">
+        <section class="surface h-100">
+            <div class="surface-body">
+                <h2 class="h5">账号说明</h2>
+                <p class="muted">个人资料可以随时更新。账号停用或权限变更会立即生效。</p>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

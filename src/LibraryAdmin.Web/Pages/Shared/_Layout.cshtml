@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - 图书管理员系统</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/LibraryAdmin.Web.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="app-header">
+        <nav class="navbar navbar-expand-lg navbar-dark">
+            <div class="container-fluid app-container">
+                <a class="navbar-brand" asp-page="/Index">
+                    <span class="brand-mark">书</span>
+                    图书管理员系统
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="展开导航">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <ul class="navbar-nav flex-grow-1">
+                            <li class="nav-item"><a class="nav-link" asp-page="/Index">概览</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-page="/Books/Index">图书目录</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-page="/Loans/Mine">我的借阅</a></li>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">管理功能</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" asp-page="/Admin/Loans">全部借阅</a></li>
+                                        <li><a class="dropdown-item" asp-page="/Admin/Accounts">账号管理</a></li>
+                                        @if (User.HasClaim("bootstrap_admin", "true"))
+                                        {
+                                            <li><a class="dropdown-item" asp-page="/Admin/AdminApplications">管理员审批</a></li>
+                                        }
+                                    </ul>
+                                </li>
+                            }
+                        </ul>
+                        <div class="nav-user">
+                            <a class="nav-link profile-link" asp-page="/Account/Profile">
+                                @User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value
+                                <span class="role-chip">@(User.IsInRole("Admin") ? "管理员" : "读者")</span>
+                            </a>
+                            <form method="post" asp-page="/Account/Logout">
+                                <button type="submit" class="btn btn-sm btn-outline-light">退出</button>
+                            </form>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="ms-auto d-flex gap-2">
+                            <a class="btn btn-sm btn-outline-light" asp-page="/Account/Login">登录</a>
+                            <a class="btn btn-sm btn-light text-success" asp-page="/Account/Register">注册</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="app-container page-shell">
+        @if (User.Identity?.IsAuthenticated == true && User.MustChangePassword())
+        {
+            <div class="alert alert-warning password-banner d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span>当前仍在使用初始密码或待更新密码。建议立即修改，避免账号风险。</span>
+                <a class="btn btn-sm btn-warning" asp-page="/Account/Password">现在修改</a>
+            </div>
+        }
+        @if (TempData["StatusMessage"] is string statusMessage)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="关闭"></button>
+            </div>
+        }
+        <main role="main" class="pb-4">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="app-footer">
+        <div class="container app-container">图书管理员系统 · 本地运行 · 数据保存在 E 盘</div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
