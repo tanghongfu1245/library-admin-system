@@ -6,10 +6,16 @@ param(
 $ErrorActionPreference = 'Stop'
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+$utf8Bom = New-Object System.Text.UTF8Encoding($true)
 
 function Write-Utf8NoBom {
     param([string]$Path, [string]$Content)
     [System.IO.File]::WriteAllText($Path, $Content, $utf8NoBom)
+}
+
+function Write-Utf8Bom {
+    param([string]$Path, [string]$Content)
+    [System.IO.File]::WriteAllText($Path, $Content, $utf8Bom)
 }
 
 function Copy-Tree {
@@ -113,7 +119,7 @@ if (-not $common.Contains($oldAlias)) {
     throw 'common.ps1 中没有找到预期的 ProjectAlias 行。'
 }
 $common = $common.Replace($oldAlias, $newAlias)
-Write-Utf8NoBom $commonPath $common
+Write-Utf8Bom $commonPath $common
 
 # 运行包没有 src，去掉 start.ps1 里的源码时间戳检查。
 $startPath = Join-Path $scriptsTarget 'start.ps1'
@@ -144,7 +150,7 @@ if (-not $start.Contains($oldStart)) {
     throw 'start.ps1 中没有找到预期的源码检查块，请检查脚本是否被修改。'
 }
 $start = $start.Replace($oldStart, $newStart)
-Write-Utf8NoBom $startPath $start
+Write-Utf8Bom $startPath $start
 
 $dataDirectory = Join-Path $OutputDirectory '数据'
 $null = New-Item -ItemType Directory -Path $dataDirectory -Force
@@ -212,14 +218,12 @@ if ($sevenZip) {
     }
 }
 else {
-    $tar = Join-Path $env:SystemRoot 'System32\tar.exe'
-    if (-not (Test-Path -LiteralPath $tar)) {
-        throw '没有找到 7-Zip 或 tar.exe，无法压缩。'
-    }
-    & $tar -a -c -f $ZipPath -C (Split-Path -Parent $OutputDirectory) (Split-Path -Leaf $OutputDirectory)
-    if ($LASTEXITCODE -ne 0) {
-        throw "tar 压缩失败，退出码 $LASTEXITCODE。"
-    }
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    [System.IO.Compression.ZipFile]::CreateFromDirectory(
+        $OutputDirectory,
+        $ZipPath,
+        [System.IO.Compression.CompressionLevel]::Optimal,
+        $true)
 }
 
 $directorySize = (Get-ChildItem -LiteralPath $OutputDirectory -Recurse -File | Measure-Object Length -Sum).Sum

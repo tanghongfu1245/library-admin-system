@@ -1,4 +1,4 @@
-. (Join-Path $PSScriptRoot 'common.ps1')
+﻿. (Join-Path $PSScriptRoot 'common.ps1')
 
 $dump = Join-Path (Split-Path -Parent $PSScriptRoot) '数据\library_admin.sql'
 if (-not (Test-Path -LiteralPath $dump)) {
